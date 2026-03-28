@@ -29,8 +29,8 @@ def test_transcribe_audio_success_short_file(mock_speech_client):
         language_code="el-GR"
     )
 
-    assert result.success is True
-    assert result.data == "Καλημέρα, πώς είστε;"
+    assert result["success"] is True
+    assert result["data"] == "Καλημέρα, πώς είστε;"
 
     # Verify API was called with correct params
     call_args = mock_client.recognize.call_args
@@ -60,8 +60,8 @@ def test_transcribe_audio_long_file(mock_speech_client):
         duration_seconds=120  # 2 minutes
     )
 
-    assert result.success is True
-    assert "Long transcript" in result.data
+    assert result["success"] is True
+    assert "Long transcript" in result["data"]
 
 
 def test_transcribe_audio_file_not_found():
@@ -70,8 +70,8 @@ def test_transcribe_audio_file_not_found():
         language_code="el-GR"
     )
 
-    assert result.success is False
-    assert "not found" in result.error.lower()
+    assert result["success"] is False
+    assert "not found" in result["error"].lower()
 
 
 def test_transcribe_audio_api_error(mock_speech_client):
@@ -84,8 +84,8 @@ def test_transcribe_audio_api_error(mock_speech_client):
         language_code="el-GR"
     )
 
-    assert result.success is False
-    assert "API quota exceeded" in result.error
+    assert result["success"] is False
+    assert "API quota exceeded" in result["error"]
 
 
 def test_transcribe_audio_empty_result(mock_speech_client):
@@ -101,5 +101,5 @@ def test_transcribe_audio_empty_result(mock_speech_client):
         language_code="el-GR"
     )
 
-    assert result.success is False
-    assert "no transcript" in result.error.lower()
+    assert result["success"] is False
+    assert "no transcript" in result["error"].lower()

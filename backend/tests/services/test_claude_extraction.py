@@ -6,7 +6,8 @@ from app.models.meeting import StructuredNotes
 
 @pytest.fixture
 def mock_anthropic():
-    with patch("app.services.claude_extraction.Anthropic") as mock:
+    with patch("app.services.claude_extraction.Anthropic") as mock, \
+         patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test_key"}):
         yield mock
 
 
@@ -27,11 +28,11 @@ def test_extract_structured_notes_success(mock_anthropic):
     transcript = "We discussed the budget. Client will review."
     result = extract_structured_notes(transcript)
 
-    assert result.success is True
-    assert isinstance(result.data, StructuredNotes)
-    assert len(result.data.discussed) == 1
-    assert result.data.discussed[0] == "Budget"
-    assert len(result.data.action_items) == 1
+    assert result["success"] is True
+    assert isinstance(result["data"], StructuredNotes)
+    assert len(result["data"].discussed) == 1
+    assert result["data"].discussed[0] == "Budget"
+    assert len(result["data"].action_items) == 1
 
 
 def test_extract_structured_notes_invalid_json(mock_anthropic):
@@ -44,8 +45,8 @@ def test_extract_structured_notes_invalid_json(mock_anthropic):
 
     result = extract_structured_notes("transcript")
 
-    assert result.success is False
-    assert "JSON" in result.error
+    assert result["success"] is False
+    assert "JSON" in result["error"]
 
 
 def test_extract_structured_notes_api_error(mock_anthropic):
@@ -55,12 +56,12 @@ def test_extract_structured_notes_api_error(mock_anthropic):
 
     result = extract_structured_notes("transcript")
 
-    assert result.success is False
-    assert "API Error" in result.error
+    assert result["success"] is False
+    assert "API Error" in result["error"]
 
 
 def test_extract_structured_notes_empty_transcript(mock_anthropic):
     result = extract_structured_notes("")
 
-    assert result.success is False
-    assert "empty" in result.error.lower()
+    assert result["success"] is False
+    assert "empty" in result["error"].lower()

@@ -41,10 +41,10 @@ def test_compose_email_success(mock_anthropic, sample_notes):
         tone="professional"
     )
 
-    assert result.success is True
-    assert "Dear John" in result.data
-    assert "Andre" in result.data
-    assert len(result.data) > 50
+    assert result["success"] is True
+    assert "Dear John" in result["data"]
+    assert "Andre" in result["data"]
+    assert len(result["data"]) > 50
 
 
 def test_compose_email_custom_tone(mock_anthropic, sample_notes):
@@ -62,8 +62,8 @@ def test_compose_email_custom_tone(mock_anthropic, sample_notes):
         tone="friendly"
     )
 
-    assert result.success is True
-    assert result.data is not None
+    assert result["success"] is True
+    assert result["data"] is not None
 
 
 def test_compose_email_api_error(mock_anthropic, sample_notes):
@@ -77,8 +77,8 @@ def test_compose_email_api_error(mock_anthropic, sample_notes):
         sender_name="Andre"
     )
 
-    assert result.success is False
-    assert "Rate limit" in result.error
+    assert result["success"] is False
+    assert "Rate limit" in result["error"]
 
 
 def test_compose_email_missing_contact_name(sample_notes):
@@ -88,5 +88,5 @@ def test_compose_email_missing_contact_name(sample_notes):
         sender_name="Andre"
     )
 
-    assert result.success is False
-    assert "contact_name" in result.error.lower()
+    assert result["success"] is False
+    assert "contact_name" in result["error"].lower()

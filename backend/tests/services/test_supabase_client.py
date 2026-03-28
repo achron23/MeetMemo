@@ -15,7 +15,8 @@ from app.models.meeting import MeetingCreate, StructuredNotes, ActionItem
 
 @pytest.fixture
 def mock_supabase():
-    with patch("app.services.supabase_client.create_client") as mock:
+    with patch("app.services.supabase_client.create_client") as mock, \
+         patch.dict("os.environ", {"SUPABASE_URL": "https://test.supabase.co", "SUPABASE_SERVICE_ROLE_KEY": "test_key"}):
         yield mock
 
 
@@ -45,9 +46,9 @@ def test_create_meeting_success(mock_supabase):
 
     result = create_meeting(meeting_create)
 
-    assert result.success is True
-    assert result.data["id"] == str(meeting_id)
-    assert result.data["title"] == "Client Call"
+    assert result["success"] is True
+    assert result["data"]["id"] == str(meeting_id)
+    assert result["data"]["title"] == "Client Call"
 
 
 def test_create_meeting_database_error(mock_supabase):
@@ -63,8 +64,8 @@ def test_create_meeting_database_error(mock_supabase):
     meeting_create = MeetingCreate(title="Test")
     result = create_meeting(meeting_create)
 
-    assert result.success is False
-    assert "Connection failed" in result.error
+    assert result["success"] is False
+    assert "Connection failed" in result["error"]
 
 
 def test_get_meeting_success(mock_supabase):
@@ -86,9 +87,9 @@ def test_get_meeting_success(mock_supabase):
 
     result = get_meeting(str(meeting_id))
 
-    assert result.success is True
-    assert result.data["id"] == str(meeting_id)
-    assert result.data["transcript"] == "Hello world"
+    assert result["success"] is True
+    assert result["data"]["id"] == str(meeting_id)
+    assert result["data"]["transcript"] == "Hello world"
 
 
 def test_get_meeting_not_found(mock_supabase):
@@ -103,8 +104,8 @@ def test_get_meeting_not_found(mock_supabase):
 
     result = get_meeting(str(uuid4()))
 
-    assert result.success is False
-    assert "not found" in result.error.lower()
+    assert result["success"] is False
+    assert "not found" in result["error"].lower()
 
 
 def test_update_meeting_transcript_success(mock_supabase):
@@ -119,7 +120,7 @@ def test_update_meeting_transcript_success(mock_supabase):
 
     result = update_meeting_transcript(str(uuid4()), "Updated transcript")
 
-    assert result.success is True
+    assert result["success"] is True
 
 
 def test_list_meetings_success(mock_supabase):
@@ -137,5 +138,5 @@ def test_list_meetings_success(mock_supabase):
 
     result = list_meetings()
 
-    assert result.success is True
-    assert len(result.data) == 2
+    assert result["success"] is True
+    assert len(result["data"]) == 2
