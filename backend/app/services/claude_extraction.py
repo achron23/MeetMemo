@@ -16,8 +16,8 @@ The transcript may be in Greek — extract and summarize in English unless told 
 
 From the transcript below, extract exactly:
 1. "discussed" — array of strings, each a key topic covered (concise, 1 sentence each)
-2. "commitments" — array of {description, owner, due_date?} — things WE committed to doing
-3. "action_items" — array of {description, owner, due_date?, priority} — all action items
+2. "commitments" — array of {{description, owner, due_date?}} — things WE committed to doing
+3. "action_items" — array of {{description, owner, due_date?, priority}} — all action items
 4. "needs_from_them" — array of strings — what we need the CLIENT to provide or do
 
 Rules:
@@ -83,6 +83,12 @@ def extract_structured_notes(transcript: str) -> Result:
             "success": False,
             "data": None,
             "error": f"Failed to parse JSON from Claude: {str(e)}"
+        }
+    except ValueError as e:
+        return {
+            "success": False,
+            "data": None,
+            "error": f"Validation error: {str(e)}"
         }
     except Exception as e:
         return {

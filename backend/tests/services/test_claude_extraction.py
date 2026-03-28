@@ -16,10 +16,13 @@ def test_extract_structured_notes_success(mock_anthropic):
     mock_client = Mock()
     mock_anthropic.return_value = mock_client
 
+    # Create mock content with text as actual string (not Mock)
+    mock_content_block = Mock()
+    mock_content_block.text = '{"discussed": ["Budget"], "commitments": [], "action_items": [{"description": "Review", "owner": "client", "priority": "high"}], "needs_from_them": ["Approval"]}'
+
     mock_response = Mock()
-    mock_response.content = [
-        Mock(text='{"discussed": ["Budget"], "commitments": [], "action_items": [{"description": "Review", "owner": "client", "priority": "high"}], "needs_from_them": ["Approval"]}')
-    ]
+    mock_response.content = [mock_content_block]
+    mock_response.usage = Mock()
     mock_response.usage.input_tokens = 100
     mock_response.usage.output_tokens = 50
     mock_client.messages.create.return_value = mock_response
@@ -39,8 +42,11 @@ def test_extract_structured_notes_invalid_json(mock_anthropic):
     mock_client = Mock()
     mock_anthropic.return_value = mock_client
 
+    mock_content_block = Mock()
+    mock_content_block.text = 'invalid json'
+
     mock_response = Mock()
-    mock_response.content = [Mock(text='invalid json')]
+    mock_response.content = [mock_content_block]
     mock_client.messages.create.return_value = mock_response
 
     result = extract_structured_notes("transcript")

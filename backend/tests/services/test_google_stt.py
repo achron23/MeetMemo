@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock, mock_open
 from app.services.google_stt import transcribe_audio
 
 
@@ -9,7 +9,17 @@ def mock_speech_client():
         yield mock
 
 
-def test_transcribe_audio_success_short_file(mock_speech_client):
+@pytest.fixture
+def mock_file_operations():
+    with patch("builtins.open", mock_open(read_data=b"fake audio data")), \
+         patch("app.services.google_stt.Path") as mock_path:
+        mock_path_instance = Mock()
+        mock_path_instance.exists.return_value = True
+        mock_path.return_value = mock_path_instance
+        yield mock_path
+
+
+def test_transcribe_audio_success_short_file(mock_speech_client, mock_file_operations):
     # Mock Google STT response
     mock_client = Mock()
     mock_speech_client.return_value = mock_client
@@ -26,7 +36,8 @@ def test_transcribe_audio_success_short_file(mock_speech_client):
     # Test
     result = transcribe_audio(
         audio_file_path="/audio/short.wav",
-        language_code="el-GR"
+        language_code="el-GR",
+        duration_seconds=30  # Short file
     )
 
     assert result["success"] is True
@@ -37,7 +48,7 @@ def test_transcribe_audio_success_short_file(mock_speech_client):
     assert call_args is not None
 
 
-def test_transcribe_audio_long_file(mock_speech_client):
+def test_transcribe_audio_long_file(mock_speech_client, mock_file_operations):
     # Mock long_running_recognize operation
     mock_client = Mock()
     mock_speech_client.return_value = mock_client
@@ -65,30 +76,36 @@ def test_transcribe_audio_long_file(mock_speech_client):
 
 
 def test_transcribe_audio_file_not_found():
-    result = transcribe_audio(
-        audio_file_path="/nonexistent/file.wav",
-        language_code="el-GR"
-    )
+    with patch("app.services.google_stt.Path") as mock_path:
+        mock_path_instance = Mock()
+        mock_path_instance.exists.return_value = False
+        mock_path.return_value = mock_path_instance
 
-    assert result["success"] is False
-    assert "not found" in result["error"].lower()
+        result = transcribe_audio(
+            audio_file_path="/nonexistent/file.wav",
+            language_code="el-GR"
+        )
+
+        assert result["success"] is False
+        assert "not found" in result["error"].lower()
 
 
-def test_transcribe_audio_api_error(mock_speech_client):
+def test_transcribe_audio_api_error(mock_speech_client, mock_file_operations):
     mock_client = Mock()
     mock_speech_client.return_value = mock_client
     mock_client.recognize.side_effect = Exception("API quota exceeded")
 
     result = transcribe_audio(
         audio_file_path="/audio/test.wav",
-        language_code="el-GR"
+        language_code="el-GR",
+        duration_seconds=30
     )
 
     assert result["success"] is False
     assert "API quota exceeded" in result["error"]
 
 
-def test_transcribe_audio_empty_result(mock_speech_client):
+def test_transcribe_audio_empty_result(mock_speech_client, mock_file_operations):
     mock_client = Mock()
     mock_speech_client.return_value = mock_client
 
@@ -98,7 +115,8 @@ def test_transcribe_audio_empty_result(mock_speech_client):
 
     result = transcribe_audio(
         audio_file_path="/audio/silent.wav",
-        language_code="el-GR"
+        language_code="el-GR",
+        duration_seconds=30
     )
 
     assert result["success"] is False

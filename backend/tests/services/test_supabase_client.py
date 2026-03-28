@@ -15,8 +15,7 @@ from app.models.meeting import MeetingCreate, StructuredNotes, ActionItem
 
 @pytest.fixture
 def mock_supabase():
-    with patch("app.services.supabase_client.create_client") as mock, \
-         patch.dict("os.environ", {"SUPABASE_URL": "https://test.supabase.co", "SUPABASE_SERVICE_ROLE_KEY": "test_key"}):
+    with patch("app.services.supabase_client._get_client") as mock:
         yield mock
 
 
@@ -134,7 +133,7 @@ def test_list_meetings_success(mock_supabase):
     ]
     mock_response.error = None
 
-    mock_client.table.return_value.select.return_value.order.return_value.execute.return_value = mock_response
+    mock_client.table.return_value.select.return_value.order.return_value.limit.return_value.execute.return_value = mock_response
 
     result = list_meetings()
 
